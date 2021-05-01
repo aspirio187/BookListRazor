@@ -1,6 +1,7 @@
 ﻿using BookListRazor.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,9 +21,23 @@ namespace BookListRazor.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetAll()
+        public async Task<IActionResult> GetAll()
         {
-            return Ok(new { data = _context.Books.ToList() });
+            return Ok(new { data = await _context.Books.ToListAsync() });
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var bookFromDb = await _context.Books.FirstOrDefaultAsync(x => x.Id == id);
+            if (bookFromDb is null)
+            {
+                return BadRequest(new { success = false, message = "Error while deleting" });
+            }
+
+            _context.Books.Remove(bookFromDb);
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true, message = "Delete successful" });
         }
     }
 }
